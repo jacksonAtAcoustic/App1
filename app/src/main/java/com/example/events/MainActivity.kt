@@ -22,6 +22,7 @@ import android.os.Build
 import androidx.appcompat.app.AlertDialog
 import android.content.DialogInterface.*
 
+// network avaliability
 fun isNetworkAvailable(context: Context): Boolean
 {
   var result = false
@@ -40,6 +41,7 @@ fun isNetworkAvailable(context: Context): Boolean
   return result
 }
 
+// is this network good?
 fun isCapableNetwork(cm: ConnectivityManager,network: Network?): Boolean{
   cm.getNetworkCapabilities(network)?.also {
     if (it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
@@ -51,42 +53,24 @@ fun isCapableNetwork(cm: ConnectivityManager,network: Network?): Boolean{
   return false
 }
 
-
-
+// handler class, event handling
 class Handler : View.OnClickListener, OnCheckedChangeListener, OnSeekBarChangeListener,
   OnEditorActionListener,TextWatcher, DialogInterface.OnClickListener
 {
   private var sliderLabel : TextView? = null
   override fun onClick(v: View?)
   {
-    //Get the text – note the typecase to more specific
+    //Get the text of the specific button
     var text = (v as Button).getText()
-
-    if (text == "Start")
-    {
-      println("Start")
-
-    } else if (text == "Pause")
-    {
-      println("Pause")
-    }
   }
 
   override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean)
   {
+    // direct button access
     var text = buttonView?.getText()
-    println("Is checked" + buttonView?.isChecked())
-    println(text)
-    if (text == "AM")
-    {
-      buttonView?.setText("FM")
-    }
-    else
-    {
-      buttonView?.setText("AM")
-    }
   }
 
+  // do I need this?
   override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean)
   {
     var slider = MainActivity.getInstance().findViewById<TextView>(R.id.freq)
@@ -94,15 +78,18 @@ class Handler : View.OnClickListener, OnCheckedChangeListener, OnSeekBarChangeLi
     slider.setText(text)
   }
 
+  // do I need this?
   override fun onStartTrackingTouch(seekBar: SeekBar?)
   {
     println("start")
   }
 
+  // do I need this?
   override fun onStopTrackingTouch(seekBar: SeekBar?)
   {
     println("stop")
   }
+
   //Invoked when pressing the return key
   override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean
   {
@@ -147,9 +134,9 @@ class MainActivity : AppCompatActivity()
 
     public fun getInstance() : MainActivity
     {
+      // makes sure this instance is not null (NPE)
       return instance!!
     }
-
   }
 
   override fun onCreate(savedInstanceState: Bundle?)
@@ -163,10 +150,10 @@ class MainActivity : AppCompatActivity()
     var res = isNetworkAvailable(this)
     println(res)
 
-
     //Instantiate Handler
     var handler = Handler()
 
+    // Keep this for now
     val dialogBuilder = AlertDialog.Builder(this)
     dialogBuilder.setMessage("Not Connected To Internet")
     dialogBuilder.setPositiveButton("OK",handler)
