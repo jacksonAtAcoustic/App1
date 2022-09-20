@@ -1,3 +1,5 @@
+// JACKSON TORREGROSSA
+// PMD APP 1
 package com.example.events
 
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +12,9 @@ class QuizHandler : Runnable {
   private var filename : String? = null
   private var text : String? = null
   private var activity : MainActivity? = null
+  private var emergencyCount : Int = 0
+  private var imgV : ImageView? = null
+  private var txtV : TextView? = null
 
   constructor(activity : MainActivity) {
     this.activity = activity
@@ -19,26 +24,43 @@ class QuizHandler : Runnable {
     this.text = "What flag is this?"
   }
 
-  constructor(filename : String, text : String) {
+  public fun setFilename(filename : String) {
     this.filename = filename
+  }
+
+  public fun setTextOfDataField(text : String) {
     this.text = text
+  }
+
+  public fun showAnswer() {
+    // render new text
+    txtV?.setText(text)
   }
 
   override fun run() {
     println("QuizHandler is running.")
 
-    var imgV = activity?.findViewById<ImageView>(R.id.imageView)
-    var txtV = activity?.findViewById<TextView>(R.id.text)
+    // emergencyCount should prevent stack overflow
+    if (emergencyCount == 0) {
+      activity?.runOnUiThread(this)
 
+      imgV = activity?.findViewById<ImageView>(R.id.imageView)
+      txtV = activity?.findViewById<TextView>(R.id.text)
+
+      emergencyCount++
+    }
+
+    // split the filename so that the image location is able to be found
+    var temp = filename?.split(".")
+    filename = temp?.get(0)
     var imgLocation = "@drawable/" + filename
 
+    // render the image
     var imageResource = activity?.resources?.getIdentifier(imgLocation, "drawable", activity?.packageName)
     imgV?.setImageResource(imageResource!!)
-  }
 
-  public fun updateText() {
-    var txtV = activity?.findViewById<TextView>(R.id.text)
-    txtV?.setText("What flag is this?")
+    // render new text
+    txtV?.setText(text)
   }
 }
 
@@ -121,17 +143,26 @@ class Quiz : Thread {
     println("Quiz thread is running.")
 
     while (count != noFlags) {
-      var index = Random.nextInt(0, countries.size)
-      var ctrl = QuizHandler(files[index], countries[index])
-      // "What flag is this?
-      ctrl.updateText()
-      // Sleep mess
-      duration?.times(1000)?.let { Thread.sleep(it.toLong()) }
+      var index = (countries.indices).shuffled().first()
+      // set generated fields
+      quizH?.setFilename(files[index])
+      // "What flag is this?"
+      quizH?.setTextOfDataField("What flag is this?")
       // execute handler
       quizH?.run()
+      // Sleep mess (longer wait)
+      duration?.times(1000)?.let { Thread.sleep(it.toLong()) }
+      // show answer
+      quizH?.setTextOfDataField(countries[index])
+      quizH?.showAnswer()
+      // Sleep mess (shorter wait)
+      duration?.times(500)?.let { Thread.sleep(it.toLong()) }
       // add to count
       count++
     }
+
+    // tries to stop once all flags are done
+    this.interrupt()
   }
 }
 
@@ -159,7 +190,6 @@ class MainActivity : AppCompatActivity()
     var activity = MainActivity.getInstance()
 
     var handler = QuizHandler(activity)
-    activity.runOnUiThread(handler)
 
     var quiz : Quiz = Quiz(5, 10, handler)
 

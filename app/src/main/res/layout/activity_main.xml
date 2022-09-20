@@ -21,6 +21,6 @@
         android:text="Event Example"
         android:textStyle="bold"
         android:textAlignment="center"
-        android:textColor="#0000F2"
+        android:textColor="#0000F0"
         android:textSize="45sp" />
 </LinearLayout>
