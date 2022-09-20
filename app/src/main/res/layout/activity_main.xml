@@ -6,4 +6,21 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:src="@drawable/republic_of_the_congo" />
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="328dp"
+        android:layout_weight="1"
+        android:text="Event Example"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:textColor="#0000F2"
+        android:textSize="45sp" />
 </LinearLayout>

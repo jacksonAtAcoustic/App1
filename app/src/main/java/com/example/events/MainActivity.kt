@@ -1,30 +1,52 @@
 package com.example.events
 
-import android.content.Context
-import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Editable
-import android.view.KeyEvent
-import android.view.View
-import android.view.View.*
-import android.view.inputmethod.InputMethodManager
-import android.widget.*
-import android.widget.CompoundButton.*
-import android.widget.SeekBar.*
-import android.widget.TextView.*
-import android.text.TextWatcher
+import android.widget.ImageView
+import android.widget.TextView
+import kotlin.random.Random
 
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.os.Build
-import androidx.appcompat.app.AlertDialog
-import android.content.DialogInterface.*
+class QuizHandler : Runnable {
+  private var filename : String? = null
+  private var text : String? = null
+  private var activity : MainActivity? = null
 
-class Quiz : Runnable {
+  constructor(activity : MainActivity) {
+    this.activity = activity
+
+    // starters
+    this.filename = "PLACEHOLDER"
+    this.text = "What flag is this?"
+  }
+
+  constructor(filename : String, text : String) {
+    this.filename = filename
+    this.text = text
+  }
+
+  override fun run() {
+    println("QuizHandler is running.")
+
+    var imgV = activity?.findViewById<ImageView>(R.id.imageView)
+    var txtV = activity?.findViewById<TextView>(R.id.text)
+
+    var imgLocation = "@drawable/" + filename
+
+    var imageResource = activity?.resources?.getIdentifier(imgLocation, "drawable", activity?.packageName)
+    imgV?.setImageResource(imageResource!!)
+  }
+
+  public fun updateText() {
+    var txtV = activity?.findViewById<TextView>(R.id.text)
+    txtV?.setText("What flag is this?")
+  }
+}
+
+class Quiz : Thread {
   private var duration : Int? = null
   private var noFlags : Int? = null
+  private var count : Int = 0
+  private var quizH : QuizHandler? = null
 
   // all flags
   private var files = arrayOf("afghanistan.bmp", "albania.bmp", "algeria.bmp", "american_samoa.bmp", "andorra.bmp", "angola.bmp", "anguilla.bmp",
@@ -57,15 +79,59 @@ class Quiz : Runnable {
     "turks_and_caicos_islands.bmp", "tuvalu.bmp","uae.bmp","uganda.bmp","ukraine.bmp","united_kingdom.bmp","united_states_of_america.bmp",
     "uruguay.bmp","us_virgin_islands.bmp","uzbekistan.bmp","vanuatu.bmp","vatican_city.bmp","venezuela.bmp","vietnam.bmp",
     "wallis_and_futuna.bmp","yemen.bmp","zambia.bmp","zimbabwe.bmp")
+  // country names
+  private var countries = arrayOf("Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla",
+    "Antigua and Barbuda", "Argentina","Armenia", "Aruba","Australia", "Austria","Azerbaijan",
+    "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin",
+    "Bermuda", "Bhutan", "Bolivia", "Bosnia", "Botswana", "Brazil", "British Virgin Islands",
+    "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde",
+    "Cayman Islands", "Central African Republic", "Chad", "Chile", "China","Christmas Island",
+    "Colombia","Comoros","Cook Islands","Costa Rica","Croatia","Cuba","Cyprus","Cyprus Northern",
+    "Czech Republic","Cte dIvoire","Democratic Republic of the Congo","Denmark","Djibouti","Dominica",
+    "Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia",
+    "Ethiopia","Falkland Islands","Faroe Islands","Fiji","Finland","France","French Polynesia",
+    "Gabon","Gambia","Georgia","Germany","Ghana","Gibraltar","Greece","Greenland","Grenada",
+    "Guam","Guatemala","Guinea","Guinea Bissau","Guyana","Haiti","Honduras","Hong Kong","Hungary",
+    "Iceland", "India","Indonesia","Iran","Iraq", "Ireland","Israel","Italy","Jamaica","Japan",
+    "Jordan", "Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon",
+    "Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Macao","Macedonia",
+    "Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Martinique",
+    "Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montserrat",
+    "Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","Netherlands Antilles",
+    "New Zealand", "Nicaragua","Niger","Nigeria","Niue","Norfolk Island","North Korea","Norway",
+    "Oman","Pakistan","Palau","Panama","Papua New Guinea","Paraguay","Peru","Philippines",
+    "Pitcairn Islands","Poland","Portugal","Puerto Rico","Qatar","Republic of the Congo","Romania",
+    "Russian Federation","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Pierre","Saint Vicent and the Grenadines",
+    "Samoa","San Marino","Sao Tom and Prncipe","Saudi Arabia","Senegal","Serbia and Montenegro",
+    "Seychelles", "Sierra Leone", "Singapore","Slovakia","Slovenia","Soloman Islands","Somalia",
+    "South Africa","South Georgia","South Korea","Soviet Union","Spain","Sri Lanka","Sudan","Suriname",
+    "Swaziland","Sweden","Switzerland","Syria", "Taiwan","Tajikistan","Tanzania","Thailand",
+    "Tibet", "Timor-Leste", "Togo","Tonga","Trinidad and Tobago","Tunisia", "Turkey","Turkmenistan",
+    "Turks and Caicos Islands", "Tuvalu","UAE","Uganda","Ukraine","United Kingdom","United States of America",
+    "Uruguay","US Virgin Islands","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam",
+    "Wallis and Futuna","Yemen","Zambia","Zimbabwe")
 
-
-  constructor(duration : Int, noFlags : Int) {
+  constructor(duration: Int, noFlags: Int, quizH: QuizHandler) {
     this.duration = duration
     this.noFlags = noFlags
+    this.quizH = quizH
   }
 
   override fun run() {
     println("Quiz thread is running.")
+
+    while (count != noFlags) {
+      var index = Random.nextInt(0, countries.size)
+      var ctrl = QuizHandler(files[index], countries[index])
+      // "What flag is this?
+      ctrl.updateText()
+      // Sleep mess
+      duration?.times(1000)?.let { Thread.sleep(it.toLong()) }
+      // execute handler
+      quizH?.run()
+      // add to count
+      count++
+    }
   }
 }
 
@@ -88,5 +154,15 @@ class MainActivity : AppCompatActivity()
     setContentView(R.layout.activity_main)
 
     instance = this
+
+    // instance of Main activity
+    var activity = MainActivity.getInstance()
+
+    var handler = QuizHandler(activity)
+    activity.runOnUiThread(handler)
+
+    var quiz : Quiz = Quiz(5, 10, handler)
+
+    quiz.start()
   }
 }
